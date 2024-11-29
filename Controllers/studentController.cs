@@ -1,6 +1,5 @@
-﻿using CollegeApp.Dto;
-using CollegeApp.Models;
-using CollegeApp.Repository;
+﻿using CollegeApp.Data;
+using CollegeApp.Dto;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,10 +9,16 @@ namespace CollegeApp.Controllers
     [ApiController]
     public class studentController : ControllerBase
     {
+        private readonly CollegeDBContext _dbContext;
+        public studentController(CollegeDBContext dbContext) 
+        {
+            _dbContext = dbContext;
+        }
+        
         [HttpGet("All")]
         public ActionResult<IEnumerable<studentDto>> GetStudents()
         {
-            var student = collegeRepository.Students.Select(n => new studentDto()
+            var student = _dbContext.Students.Select(n => new studentDto()
             {
                 Id = n.Id,
                 StudentName= n.StudentName,
@@ -30,7 +35,7 @@ namespace CollegeApp.Controllers
             {
                 return BadRequest("Id is less than zero");
             }
-            var student = collegeRepository.Students.Where(n => n.Id == Id).FirstOrDefault();
+            var student = _dbContext.Students.Where(n => n.Id == Id).FirstOrDefault();
             if (student == null)
             {
                 return NotFound();
@@ -60,7 +65,7 @@ namespace CollegeApp.Controllers
   //              return BadRequest(ModelState);
    //         }
 
-            int newId = collegeRepository.Students.LastOrDefault().Id + 1;
+            int newId = _dbContext.Students.LastOrDefault().Id + 1;
             Student student = new Student
             {
                 Id = newId,
@@ -68,7 +73,9 @@ namespace CollegeApp.Controllers
                 Address = model.Address,
                 Email = model.Email,
             };
-            collegeRepository.Students.Add(student);
+            
+            _dbContext.Students.Add(student);
+            _dbContext.SaveChanges();
             model.Id = student.Id;
             
             return CreatedAtRoute("GetStudentById", new {id = model.Id},model);
@@ -78,7 +85,7 @@ namespace CollegeApp.Controllers
         [HttpGet("by-name/{name:alpha}", Name = "GetStudentByName")]
         public ActionResult<studentDto> GetStudentByName(string name)
         {
-            var student = collegeRepository.Students.Where(n => n.StudentName == name).FirstOrDefault();
+            var student = _dbContext.Students.Where(n => n.StudentName == name).FirstOrDefault();
             if (student == null) { return NotFound("Name of student is not available"); }
             var studentDTO = new studentDto
             {
@@ -99,14 +106,14 @@ namespace CollegeApp.Controllers
                 return NotFound();
             }
 
-            var  existingStudent = collegeRepository.Students.Where(s => s.Id == model.Id).FirstOrDefault();
+            var  existingStudent = _dbContext.Students.Where(s => s.Id == model.Id).FirstOrDefault();
             if(existingStudent == null){
                 return NotFound();
             }
             existingStudent.StudentName = model.StudentName;
             existingStudent.Email = model.Email;
             existingStudent.Address = model.Address;
-            
+            _dbContext.SaveChanges();
             return Ok();
         }
        [HttpPatch]
@@ -118,7 +125,7 @@ namespace CollegeApp.Controllers
                 return BadRequest("Not found");
             }
 
-            var  existingStudent = collegeRepository.Students.Where(s => s.Id == Id).FirstOrDefault();
+            var  existingStudent = _dbContext.Students.Where(s => s.Id == Id).FirstOrDefault();
             if(existingStudent == null){
                 return NotFound();
             }
@@ -137,19 +144,19 @@ namespace CollegeApp.Controllers
             existingStudent.StudentName = studentDTO.StudentName;
             existingStudent.Email = studentDTO.Email;
             existingStudent.Address = studentDTO.Address;
-            
+            _dbContext.SaveChanges();
             return Ok();
         }
 
         [HttpDelete("{Id:int}")]
         public ActionResult DeleteStudentById(int Id)
         {
-            var student = collegeRepository.Students.FirstOrDefault(n => n.Id == Id);
+            var student = _dbContext.Students.FirstOrDefault(n => n.Id == Id);
             if(student == null)
             {
                 return NotFound();
             }
-            collegeRepository.Students.Remove(student);
+            _dbContext.Students.Remove(student);
 
             return NoContent();
         }
