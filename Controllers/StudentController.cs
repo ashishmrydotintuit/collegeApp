@@ -15,9 +15,9 @@ namespace CollegeApp.Controllers
     public class StudentController : ControllerBase
     {
         private readonly IMapper _mapper;
-        private readonly IStudentRepository _studentRepository;
+        private readonly ICollegeRepository<Student> _studentRepository;
         public StudentController(CollegeDBContext dbContext, IMapper mapper, 
-            IStudentRepository studentRepository) 
+            ICollegeRepository<Student> studentRepository) 
         {
             _mapper = mapper;
             _studentRepository = studentRepository;
@@ -31,15 +31,13 @@ namespace CollegeApp.Controllers
             return Ok(studentDtoData);
         }
 
+        
         [HttpGet("{Id:int}", Name = "GetStudentById")]
         public async Task<ActionResult<studentDto>> GetStudentById(int Id)
         {
             if(Id<=0)
-            {
                 return BadRequest("Id is less than zero");
-            }
-
-            var student = await _studentRepository.GetByIdAsync(Id);
+            var student = await _studentRepository.GetByIdAsync(student => student.Id == Id);
             if (student == null)
             {
                 return NotFound($"The student with id {Id} was not found.");
@@ -48,6 +46,7 @@ namespace CollegeApp.Controllers
             return Ok(studentDTO);
         }
 
+        
         [HttpPost]
         [Route("create")]
         public async Task<ActionResult<studentDto>> CreateStudent([FromBody]studentDto model)
@@ -62,20 +61,18 @@ namespace CollegeApp.Controllers
   //              ModelState.AddModelError("AdmissionDate Error", "Admission Date Must be greater than or equal to the current date");
   //              return BadRequest(ModelState);
    //         }
-
             Student student = _mapper.Map<Student>(model);
-            
-            var id = await _studentRepository.CreateAsync(student);
-            model.Id = id;
-            
+            var newStudent = await _studentRepository.CreateAsync(student);
+            model.Id = newStudent.Id;
             return CreatedAtRoute("GetStudentById", new {id = model.Id},model);
             
         }
 
+        
         [HttpGet("by-name/{name:alpha}", Name = "GetStudentByName")]
         public async Task<ActionResult<studentDto>> GetStudentByName(string name)
         {
-            var student = await _studentRepository.GetByNameAsync(name);
+            var student = await _studentRepository.GetByNameAsync(student => student.StudentName.ToLower().Contains(name.ToLower()));
             if (student == null) { return NotFound("Name of student is not available"); }
             var studentDTO = _mapper.Map<studentDto>(student);
             return Ok(studentDTO);
@@ -90,7 +87,7 @@ namespace CollegeApp.Controllers
                 return NotFound();
             }
 
-            var existingStudent = await _studentRepository.GetByIdAsync(model.Id);
+            var existingStudent = await _studentRepository.GetByIdAsync(n => n.Id == model.Id);
             if(existingStudent == null){
                 return NotFound();
             }
@@ -102,7 +99,7 @@ namespace CollegeApp.Controllers
         [HttpDelete("{Id:int}")]
         public async Task<ActionResult> DeleteStudentById(int Id)
         {
-            var student =await _studentRepository.GetByIdAsync(Id);
+            var student =await _studentRepository.GetByIdAsync(student => student.Id == Id);
             if(student == null)
             {
                 return NotFound();

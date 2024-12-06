@@ -21,6 +21,9 @@ builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
 builder.Services.AddTransient<IMyLogger, LogToFile>(); // This indicates that where ever IMylogger is used it will load logtofile.
 builder.Services.AddTransient<IStudentRepository, StudentRepository>();
 
+//For Generic type we need to register like this
+builder.Services.AddScoped(typeof(ICollegeRepository<>), typeof(CollegeRepository<>));
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
