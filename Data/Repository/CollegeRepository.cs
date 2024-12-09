@@ -37,7 +37,7 @@ public class CollegeRepository<T> : ICollegeRepository<T> where T : class
 
     public async Task<T> UpdateAsync(T dbRecord)
     {
-       _dbContext.Update(dbRecord);
+        _dbContext.Update(dbRecord);
         await _dbContext.SaveChangesAsync();
         return dbRecord;
     }

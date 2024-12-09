@@ -1,9 +1,10 @@
-﻿using System.Xml.Linq;
+﻿﻿using System.Xml.Linq;
 using AutoMapper;
 using CollegeApp.Data;
 using CollegeApp.Data.Repository;
 using CollegeApp.Dto;
 using CollegeApp.Migrations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,18 +13,19 @@ namespace CollegeApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize(Roles = "Admin")]
     public class StudentController : ControllerBase
     {
         private readonly IMapper _mapper;
-        private readonly ICollegeRepository<Student> _studentRepository;
-        public StudentController(CollegeDBContext dbContext, IMapper mapper, 
-            ICollegeRepository<Student> studentRepository) 
+        private readonly IStudentRepository _studentRepository;
+        public StudentController(CollegeDBContext dbContext, IMapper mapper, IStudentRepository studentRepository) 
         {
             _mapper = mapper;
             _studentRepository = studentRepository;
         }
         
         [HttpGet("All")]
+        //[AllowAnonymous] //This indicates that this api is accessible by everyone.
         public async Task<ActionResult<IEnumerable<studentDto>>> GetStudentsAsync()
         {
             var students = await _studentRepository.GetAllAsync();

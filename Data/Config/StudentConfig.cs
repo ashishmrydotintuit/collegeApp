@@ -33,5 +33,9 @@ public class StudentConfig : IEntityTypeConfiguration<Student>
                 DOB = new DateTime(1997,4,21),
             },
         });
+        
+        //Foreign key configurations
+        builder.HasOne(n=>n.Department).WithMany(n=>n.Students).HasForeignKey(n=>n.DepartmentId)
+            .HasConstraintName("FK_Students_Departments");
     }
 }

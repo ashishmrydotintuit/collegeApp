@@ -26,7 +26,11 @@ builder.Services.AddScoped(typeof(ICollegeRepository<>), typeof(CollegeRepositor
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddCors(options =>options.AddPolicy("MyTestCORS", policy =>
+{
+    //policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    policy.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
+}));
 
 var app = builder.Build();
 
@@ -38,6 +42,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("MyTestCORS");
 
 app.UseAuthorization();
 
