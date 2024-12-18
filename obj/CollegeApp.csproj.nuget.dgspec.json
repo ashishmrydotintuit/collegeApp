@@ -13,7 +13,6 @@
         "packagesPath": "/home/ashishmishra/.nuget/packages/",
         "outputPath": "/home/ashishmishra/DotNet/CollegeApp/CollegeApp/obj/",
         "projectStyle": "PackageReference",
-        "UsingMicrosoftNETSdk": false,
         "configFilePaths": [
           "/home/ashishmishra/.nuget/NuGet/NuGet.Config"
         ],
@@ -51,6 +50,10 @@
             "AutoMapper.Extensions.Microsoft.DependencyInjection": {
               "target": "Package",
               "version": "[12.0.0, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[8.0.11, )"
             },
             "Microsoft.AspNetCore.JsonPatch": {
               "target": "Package",

@@ -1,4 +1,5 @@
-﻿﻿using System.Xml.Linq;
+﻿
+using System.Net;
 using AutoMapper;
 using CollegeApp.Data;
 using CollegeApp.Data.Repository;
@@ -13,24 +14,39 @@ namespace CollegeApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public class StudentController : ControllerBase
     {
         private readonly IMapper _mapper;
         private readonly IStudentRepository _studentRepository;
+        private readonly ApiResponse _apiResponse;
         public StudentController(CollegeDBContext dbContext, IMapper mapper, IStudentRepository studentRepository) 
         {
             _mapper = mapper;
             _studentRepository = studentRepository;
+            _apiResponse = new ApiResponse();
         }
         
         [HttpGet("All")]
         //[AllowAnonymous] //This indicates that this api is accessible by everyone.
-        public async Task<ActionResult<IEnumerable<studentDto>>> GetStudentsAsync()
+        public async Task<ActionResult<ApiResponse>> GetStudentsAsync()
         {
-            var students = await _studentRepository.GetAllAsync();
-            var studentDtoData = _mapper.Map<List<studentDto>>(students);//In map always pass the destination object
-            return Ok(studentDtoData);
+            try
+            {
+                var students = await _studentRepository.GetAllAsync();
+                _apiResponse.Data = _mapper.Map<List<studentDto>>(students);//In map always pass the destination object
+                _apiResponse.Status = true;
+                _apiResponse.StatusCode = HttpStatusCode.OK;
+                return Ok(_apiResponse);
+            }
+            catch (Exception e)
+            {
+                _apiResponse.Errors.Add(e.Message);
+                _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
+                _apiResponse.Status = false;
+                return _apiResponse;
+            }
+            
         }
 
         
@@ -44,8 +60,10 @@ namespace CollegeApp.Controllers
             {
                 return NotFound($"The student with id {Id} was not found.");
             }
-            var studentDTO = _mapper.Map<studentDto>(student);
-            return Ok(studentDTO);
+            _apiResponse.Data = _mapper.Map<studentDto>(student);
+            _apiResponse.Status = true;
+            _apiResponse.StatusCode = HttpStatusCode.OK;
+            return Ok(_apiResponse);
         }
 
         
@@ -66,7 +84,10 @@ namespace CollegeApp.Controllers
             Student student = _mapper.Map<Student>(model);
             var newStudent = await _studentRepository.CreateAsync(student);
             model.Id = newStudent.Id;
-            return CreatedAtRoute("GetStudentById", new {id = model.Id},model);
+            _apiResponse.Data= model;
+            _apiResponse.Status = true;
+            _apiResponse.StatusCode = HttpStatusCode.OK;
+            return CreatedAtRoute("GetStudentById", new {id = model.Id},_apiResponse);
             
         }
 
@@ -76,8 +97,10 @@ namespace CollegeApp.Controllers
         {
             var student = await _studentRepository.GetByNameAsync(student => student.StudentName.ToLower().Contains(name.ToLower()));
             if (student == null) { return NotFound("Name of student is not available"); }
-            var studentDTO = _mapper.Map<studentDto>(student);
-            return Ok(studentDTO);
+            _apiResponse.Data= _mapper.Map<studentDto>(student);
+            _apiResponse.Status = true;
+            _apiResponse.StatusCode = HttpStatusCode.OK;
+            return Ok(_apiResponse);
         }
 
         [HttpPut]
