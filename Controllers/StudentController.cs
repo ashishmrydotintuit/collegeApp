@@ -14,7 +14,7 @@ namespace CollegeApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "SuperAdmin,Admin")]
+    //[Authorize(Roles = "SuperAdmin,Admin")]
     public class StudentController : ControllerBase
     {
         private readonly IMapper _mapper;
@@ -55,7 +55,7 @@ namespace CollegeApp.Controllers
         {
             if(Id<=0)
                 return BadRequest("Id is less than zero");
-            var student = await _studentRepository.GetByIdAsync(student => student.Id == Id);
+            var student = await _studentRepository.GetAsync(student => student.Id == Id);
             if (student == null)
             {
                 return NotFound($"The student with id {Id} was not found.");
@@ -105,26 +105,45 @@ namespace CollegeApp.Controllers
 
         [HttpPut]
         [Route("Update")]
-        public async Task<ActionResult> UpdateStudent([FromBody] studentDto model)
+        //api/student/update
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<ActionResult<ApiResponse>> UpdateStudentAsync([FromBody] studentDto dto)
         {
-            if(model == null || model.Id <=0)
+            try
             {
-                return NotFound();
-            }
+                if (dto == null || dto.Id <= 0)
+                    BadRequest();
 
-            var existingStudent = await _studentRepository.GetByIdAsync(n => n.Id == model.Id);
-            if(existingStudent == null){
-                return NotFound();
+                var existingStudent = await _studentRepository.GetAsync(student => student.Id == dto.Id, true);
+
+                if (existingStudent == null)
+                    return NotFound();
+
+                var newRecord = _mapper.Map<Student>(dto);
+
+                await _studentRepository.UpdateAsync(newRecord);
+
+                return NoContent();
             }
-            var newStudent = _mapper.Map<Student>(model);
-            await _studentRepository.UpdateAsync(newStudent);
-            return Ok();
+            catch (Exception ex)
+            {
+                _apiResponse.Errors.Add(ex.Message);
+                _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
+                _apiResponse.Status = false;
+                return _apiResponse;
+            }
         }
+
 
         [HttpDelete("{Id:int}")]
         public async Task<ActionResult> DeleteStudentById(int Id)
         {
-            var student =await _studentRepository.GetByIdAsync(student => student.Id == Id);
+            var student =await _studentRepository.GetAsync(student => student.Id == Id);
             if(student == null)
             {
                 return NotFound();
