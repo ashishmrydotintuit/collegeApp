@@ -10,6 +10,7 @@ public class AutoMapperConfig : Profile
     {
         CreateMap<studentDto, Student>().ReverseMap();
         CreateMap<RoleDto, Role>().ReverseMap();
+        CreateMap<RolePrivilageDto, RolePrivilage>().ReverseMap();
         //If the name field is different in the dto and the model class at that time we need to map
         // for that we need to use formember.
         //CreateMap<studentDto, Student>().ForMember(n => n.StudentName,opt => opt.MapFrom(x =>x.Name)).ReverseMap();
